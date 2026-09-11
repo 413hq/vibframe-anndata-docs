@@ -1,0 +1,105 @@
+name: Publish versioned documentation
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version to document (empty = latest PyPI release)"
+        required: false
+        type: string
+  repository_dispatch:
+    types: [package_release]
+  schedule:
+    - cron: "17 */6 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "requirements.txt"
+      - ".github/workflows/publish-docs.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: public-docs
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout documentation source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install documentation toolchain
+        run: python -m pip install --upgrade pip -r requirements.txt
+
+      - name: Resolve package version
+        id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version || '' }}
+          DISPATCH_VERSION: ${{ github.event.client_payload.version || '' }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          requested = os.environ.get("INPUT_VERSION") or os.environ.get("DISPATCH_VERSION")
+          if requested:
+              version = requested.removeprefix("v")
+          else:
+              with urllib.request.urlopen(
+                  "https://pypi.org/pypi/vibframe-anndata/json", timeout=30
+              ) as response:
+                  version = json.load(response)["info"]["version"]
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"version={version}\n")
+          print(f"Documentation target: vibframe-anndata=={version}")
+          PY
+
+      - name: Install documented package version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: python -m pip install "vibframe-anndata==${VERSION}"
+
+      - name: Validate documentation build
+        run: mkdocs build --strict
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch existing documentation versions
+        run: git fetch origin gh-pages:gh-pages || true
+
+      - name: Publish version and update latest
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mike deploy --branch gh-pages --push --update-aliases "${VERSION}" latest
+          mike set-default --branch gh-pages --push latest
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "### Documentation published" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Package: \`vibframe-anndata==${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version alias: \`latest\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Pages branch: \`gh-pages\`" >> "$GITHUB_STEP_SUMMARY"
