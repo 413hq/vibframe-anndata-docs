@@ -7,23 +7,21 @@ on:
         description: "Package version to document (empty = latest PyPI release)"
         required: false
         type: string
+      force:
+        description: "Replace an existing documentation snapshot"
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [package_release]
   schedule:
-    - cron: "17 */6 * * *"
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - "mkdocs.yml"
-      - "requirements.txt"
-      - ".github/workflows/publish-docs.yml"
+    - cron: "17 * * * *"
 
 permissions:
   contents: write
 
 concurrency:
-  group: public-docs
+  group: public-docs-publish
   cancel-in-progress: false
 
 jobs:
@@ -43,9 +41,6 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
-
-      - name: Install documentation toolchain
-        run: python -m pip install --upgrade pip -r requirements.txt
 
       - name: Resolve package version
         id: version
@@ -72,23 +67,64 @@ jobs:
           print(f"Documentation target: vibframe-anndata=={version}")
           PY
 
+      - name: Fetch existing documentation versions
+        run: git fetch origin gh-pages:gh-pages || true
+
+      - name: Decide whether publication is needed
+        id: publish
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          version = os.environ["VERSION"]
+          force = os.environ.get("FORCE", "false").lower() == "true"
+          exists = False
+
+          try:
+              raw = subprocess.check_output(
+                  ["git", "show", "gh-pages:versions.json"], text=True
+              )
+              exists = any(item.get("version") == version for item in json.loads(raw))
+          except (subprocess.CalledProcessError, json.JSONDecodeError):
+              pass
+
+          should_publish = force or not exists
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"needed={'true' if should_publish else 'false'}\n")
+
+          if exists and not force:
+              print(f"Documentation {version} already exists; preserving immutable snapshot.")
+          else:
+              print(f"Documentation {version} will be published.")
+          PY
+
+      - name: Install documentation toolchain
+        if: steps.publish.outputs.needed == 'true'
+        run: python -m pip install --upgrade pip -r requirements.txt
+
       - name: Install documented package version
+        if: steps.publish.outputs.needed == 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: python -m pip install "vibframe-anndata==${VERSION}"
 
       - name: Validate documentation build
+        if: steps.publish.outputs.needed == 'true'
         run: mkdocs build --strict
 
       - name: Configure Git identity
+        if: steps.publish.outputs.needed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Fetch existing documentation versions
-        run: git fetch origin gh-pages:gh-pages || true
-
       - name: Publish version and update latest
+        if: steps.publish.outputs.needed == 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
@@ -98,8 +134,12 @@ jobs:
       - name: Summary
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          NEEDED: ${{ steps.publish.outputs.needed }}
         run: |
-          echo "### Documentation published" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Versioned documentation" >> "$GITHUB_STEP_SUMMARY"
           echo "- Package: \`vibframe-anndata==${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Version alias: \`latest\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Pages branch: \`gh-pages\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$NEEDED" = "true" ]; then
+            echo "- Result: published and \`latest\` updated" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Result: existing immutable snapshot preserved" >> "$GITHUB_STEP_SUMMARY"
+          fi
