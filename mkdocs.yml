@@ -1,0 +1,90 @@
+site_name: vibframe-anndata
+site_description: Versioned technical documentation for VibFrame to AnnData conversion and feature engineering.
+site_url: https://413hq.github.io/vibframe-anndata-docs/
+repo_url: https://github.com/413hq/vibframe-anndata-docs
+repo_name: 413hq/vibframe-anndata-docs
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
+  - User guide:
+      - Choosing a workflow: guides/workflows.md
+      - In-memory workflow: guides/in-memory.md
+      - Out-of-core workflow: guides/out-of-core.md
+      - Configuration: guides/configuration.md
+  - Concepts:
+      - Architecture: concepts/architecture.md
+      - AnnData data model: concepts/data-model.md
+      - Metrics and provenance: concepts/metrics.md
+  - Reference:
+      - Python API: reference/api.md
+      - Metric support: reference/metric-support.md
+      - Known limitations: reference/limitations.md
+      - Changelog: reference/changelog.md
+  - About:
+      - Versioning: about/versioning.md
+
+exclude_docs: |
+  _includes/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.tabs.link
+    - search.highlight
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: true
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/vibframe-anndata/
+
+copyright: Copyright © 2026 vibframe-anndata contributors · BSD-3-Clause
