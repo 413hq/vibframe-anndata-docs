@@ -1,6 +1,8 @@
 name: Publish versioned documentation
 
 on:
+  push:
+    branches: ["main"]
   workflow_dispatch:
     inputs:
       version:
