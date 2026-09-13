@@ -32,14 +32,16 @@ The public documentation repository uses MkDocs Material and Mike. A documentati
 
 The scheduled synchronization acts as a fallback so a new PyPI release is picked up even if no explicit documentation dispatch is sent.
 
+Existing numbered snapshots are treated as immutable by default. A maintainer can explicitly republish a version with `force=true` when correcting documentation for a just-released package without changing the package artifact itself.
+
 ## Reproducible research
 
 If your environment contains:
 
 ```text
-vibframe-anndata==0.1.0
+vibframe-anndata==0.2.0
 ```
 
-select documentation version `0.1.0`, not `latest`.
+select documentation version `0.2.0`, not `latest`, when you need the documentation to remain pinned to that package version.
 
 The package also stores producer/version provenance inside generated AnnData/H5AD artifacts, which can help identify the documentation version relevant to an existing dataset.

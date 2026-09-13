@@ -1,19 +1,21 @@
 # Metric support
 
-Release 0.1.0 was validated against the supplied synthetic VibFrame metric catalogs.
+Release 0.2.0 keeps the same deliberately conservative metric-support boundary as 0.1.0 while improving the execution engine around it.
 
 ## Support summary
 
-| Item | 0.1.0 status |
+| Item | 0.2.0 status |
 |---|---:|
 | Unique metric names in supplied catalogs | 104 |
 | Reproducible metric names | 76 |
 | Explicitly unsupported metric names | 28 |
 | Supported catalog descriptors in full local regression | 430 / 430 |
 | Reference comparisons in full local regression | 3,440 |
-| Regression tolerance | `atol=1e-3`, `rtol=1e-3` |
+| Repository regression tolerance | `atol=1e-3`, `rtol=1e-3` |
 
 The package deliberately rejects definitions it cannot reproduce from the persisted raw signals.
+
+The regression tolerance above is a repository validation threshold. It is **not** claimed to be an authoritative TWave production tolerance, rounding rule or per-metric engineering contract.
 
 ## Supported calculation families
 
@@ -32,7 +34,7 @@ The reproducible catalog definitions include:
 
 ## Unsupported phase metrics
 
-The following families require complex spectrum / phase information that is not present in the magnitude-only persisted spectra used by the current VibFrame contract:
+The following families require complex spectrum / phase information that is not present in the magnitude-only persisted spectra used by the current package-side VibFrame contract:
 
 - `peak_phase_1X*`
 - `peak_phase_2X*`
@@ -51,16 +53,16 @@ The following families require complex spectrum / phase information that is not 
 - `cross_phase_VA_1X`
 - `cross_phase_VA_2X`
 
-These definitions raise a controlled feature error instead of returning an approximation.
+These definitions raise a controlled feature error instead of returning an approximation. Support remains deferred until an authoritative persisted complex/phase representation is available.
 
 ## Unsupported cross-point ratios
 
-Two catalog names use the statistic `cross_point_ratio`, but the supplied reference metric implementation did not contain an authoritative calculation:
+Two catalog names use the statistic `cross_point_ratio`, but the supplied reference metric implementation does not contain an authoritative calculation:
 
 - `axial_radial_ratio_1X`
 - `vertical_horizontal_ratio_1X`
 
-They remain unsupported in 0.1.0.
+They remain unsupported in 0.2.0 rather than being approximated.
 
 ## Runtime audit
 
@@ -81,6 +83,14 @@ for status in unsupported:
 
 This is preferable to assuming that two similarly named metrics from different catalogs have identical contracts.
 
-## Units
+## Units and external semantics
 
 Catalog unit codes are preserved as supplied. The package does not silently reinterpret or convert catalog unit codes during feature calculation.
+
+Release 0.2.0 separates three levels of authority:
+
+1. behavior implemented and regression-validated by the package;
+2. semantics inferred from persisted descriptors/reference material;
+3. authoritative producer/TWave contracts for engineering units, valid domains, preconditions and production tolerances.
+
+The third level remains an external input and is not invented by the package.

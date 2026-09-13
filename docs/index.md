@@ -36,7 +36,7 @@ The current release supports Python 3.10+.
 | Fits comfortably in RAM | `import_raw()` + `add_features()` | In-memory |
 | Larger than RAM | `import_raw_to_h5ad()` + `add_features_to_h5ad()` | Bounded-memory / blockwise |
 
-Both paths implement the same logical AnnData contract and use the same feature calculations.
+Both paths implement the same logical AnnData contract and the same numerical feature semantics.
 
 !!! tip "Start here"
     If you are using the package for the first time, read the [Quickstart](getting-started/quickstart.md), then [Choosing a workflow](guides/workflows.md).
@@ -54,9 +54,24 @@ A package-generated dataset can contain:
 
 This makes the H5AD a reusable analysis artifact rather than a one-shot export.
 
-## Metric support in 0.1.0
+## What changed in 0.2.0
 
-Across the supplied metric catalogs, 76 of 104 unique metric names are reproducible from the available persisted signals. Unsupported definitions are rejected explicitly rather than approximated. See [Metric support](reference/metric-support.md).
+Release 0.2.0 focuses on scalable feature execution and release hardening:
+
+- channel-centric planning loads each required raw channel once per observation block;
+- catalog-backed spectral families use vectorized shared workspaces;
+- compatible waveform statistics share reductions;
+- out-of-core enrichment writes feature matrices directly without rebuilding enriched AnnData objects for every block;
+- mixed catalog/registered feature metadata is normalized and serialization-preflighted before long-running computation;
+- release validation now includes explicit macOS and Windows smoke checks.
+
+On the accepted 180-day / 12-machine H5AD, the representative mixed EDA workload added 118 variables in **43.396 s** with **0.860 GiB** peak RSS. The waveform control improved from **51.358 s** in 0.1.0 to **32.705 s** in 0.2.0.
+
+See [Out-of-core workflow](guides/out-of-core.md) for the measured release-scale results.
+
+## Metric support in 0.2.0
+
+Across the supplied metric catalogs, 76 of 104 unique metric names are reproducible from the available persisted signals. Unsupported definitions are rejected explicitly rather than approximated. Phase/cross-phase metrics still require an authoritative complex/phase representation, and two `cross_point_ratio` metrics still require an authoritative definition. See [Metric support](reference/metric-support.md).
 
 ## Versioned documentation
 
