@@ -43,7 +43,7 @@ mkdocs serve
 
 ## Release synchronization
 
-`.github/workflows/publish-docs.yml` checks PyPI hourly, can also be run manually, and accepts a `repository_dispatch` event for immediate integration later. When it finds a package version that has not yet been documented it:
+`.github/workflows/publish-docs.yml` runs when documentation changes land on `main`, checks PyPI hourly as a fallback, can be run manually, and accepts a `repository_dispatch` event for package-release integration. When it finds a package version that has not yet been documented it:
 
 1. installs that exact `vibframe-anndata` release from PyPI;
 2. builds the API reference against the installed package;
@@ -52,6 +52,8 @@ mkdocs serve
 5. publishes the generated site to `gh-pages`.
 
 Existing numbered documentation snapshots are preserved unless a maintainer explicitly runs the workflow with `force=true`.
+
+The push trigger means the normal release workflow is now: publish the package, update/merge the public documentation source, and let that `main` update publish the new versioned snapshot automatically. The hourly schedule remains a safety net if no explicit documentation-source update occurs.
 
 `.github/workflows/validate-docs.yml` builds the site with `mkdocs build --strict` for every documentation change, without modifying released snapshots.
 
