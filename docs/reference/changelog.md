@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.2.1 — 2026-09-14
+
+Patch release 0.2.1 fixes variable-waveform channel fragmentation and adds benchmarked opt-in compression for large ragged raw HDF5 payloads.
+
+### Fixed
+
+- waveform `n_samples` is no longer part of logical channel identity;
+- repeated captures of the same physical waveform channel with different sample lengths now remain one ragged channel;
+- exact per-snapshot sample lengths and raw payload values remain preserved;
+- the representative 155,520-observation variable-waveform fixture now uses **36 waveform channels instead of 24,291**;
+- the corrected uncompressed H5AD is **13.854 GiB**, versus approximately **98.35 GiB** with the fragmented channel identity.
+
+### Added
+
+- `output.raw_compression` with `none`, `lzf` and `gzip`;
+- `output.raw_compression_level` for gzip levels 1–9, defaulting to 4 when gzip is selected;
+- compression is applied only to the large ragged raw `node2-data` payloads; small dense companion matrices remain uncompressed;
+- exact round-trip regression coverage for uncompressed, LZF, gzip-1 and gzip-4 storage;
+- representative size/write/read/feature-enrichment benchmark evidence for the compression decision.
+
+### Compression decision
+
+The representative post-fix benchmark produced:
+
+| Codec | H5AD size | Write time | Waveform RMS enrichment |
+|---|---:|---:|---:|
+| none | 13.854 GiB | 155.621 s | 75.297 s |
+| LZF | 13.795 GiB | 192.416 s | 94.201 s |
+| gzip-1 | 12.757 GiB | 555.066 s | 329.147 s |
+| gzip-4 | 12.713 GiB | 626.528 s | 329.163 s |
+
+All sampled raw digests matched the uncompressed baseline. `none` therefore remains the default: LZF saved only 0.43%, while gzip saved about 8% at a substantially higher write and feature-read cost. Compression remains available when storage pressure justifies the trade-off.
+
+Release validation passed Linux CI on Python 3.10/3.12, the non-publishing release-candidate build/wheel smoke, and macOS 14 + Windows latest platform smoke before publication. The final workflow then published to PyPI, installed the exact `0.2.1` package back from PyPI, and created the GitHub Release.
+
 ## 0.2.0 — 2026-09-13
 
 Release 0.2.0 focuses on scalable feature execution, serialization safety and release maturity.
