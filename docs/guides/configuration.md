@@ -18,6 +18,8 @@ raw_import:
 output:
   path: dataset_features.h5ad
   dtype: float64             # float32 | float64
+  raw_compression: none      # none | lzf | gzip
+  # raw_compression_level: 4 # gzip only; integer 1..9
 
 feature_policy:
   on_conflict: error         # error | replace | variant
@@ -47,7 +49,7 @@ obs:
 | `version` | Configuration schema version. Current value: `1` |
 | `input` | Optional source path for convenience workflows |
 | `raw_import` | Which raw families to ingest and missing-signal policy |
-| `output` | Optional output path and numerical dtype |
+| `output` | Optional output path, numerical dtype and raw HDF5 compression policy |
 | `features` | Ordered list of feature requests |
 | `obs` | Requested observation columns |
 | `feature_policy` | Conflict and calculation-error policies |
@@ -144,6 +146,36 @@ output:
 uses double precision for the materialized numerical matrices.
 
 The package does not implicitly change the semantics of catalog units when choosing the storage dtype.
+
+## Raw HDF5 compression
+
+Release 0.2.1 adds optional lossless compression for the large ragged raw `node2-data` payloads written by the streamed H5AD importer.
+
+```yaml
+output:
+  raw_compression: none
+```
+
+is the default and keeps the fastest measured write/read path.
+
+```yaml
+output:
+  raw_compression: lzf
+```
+
+uses HDF5 LZF compression.
+
+```yaml
+output:
+  raw_compression: gzip
+  raw_compression_level: 4
+```
+
+uses gzip. `raw_compression_level` is valid only with gzip and must be an integer from 1 to 9; when omitted for gzip, the package uses level 4.
+
+Compression applies to the large ragged raw sample payloads, not to the small dense companion matrices. It does not change sample values or waveform lengths.
+
+The 0.2.1 representative benchmark kept `none` as the default: LZF reduced the full H5AD by only 0.43% while increasing write time by 23.6% and waveform-RMS enrichment by 25.1%; gzip levels 1 and 4 reduced size by about 8% but increased write time to 3.57–4.03× and RMS enrichment to about 4.37× the uncompressed baseline. Use compression when storage pressure justifies that trade-off.
 
 ## Load configuration explicitly
 

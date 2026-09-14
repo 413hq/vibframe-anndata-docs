@@ -27,7 +27,7 @@ analysis-ready AnnData / H5AD
 python -m pip install vibframe-anndata
 ```
 
-The current release supports Python 3.10+.
+The current release is **0.2.1** and supports Python 3.10+.
 
 ## Pick the right path
 
@@ -54,22 +54,20 @@ A package-generated dataset can contain:
 
 This makes the H5AD a reusable analysis artifact rather than a one-shot export.
 
-## What changed in 0.2.0
+## What changed in 0.2.1
 
-Release 0.2.0 focuses on scalable feature execution and release hardening:
+Release 0.2.1 is a focused storage/correctness patch over 0.2.0:
 
-- channel-centric planning loads each required raw channel once per observation block;
-- catalog-backed spectral families use vectorized shared workspaces;
-- compatible waveform statistics share reductions;
-- out-of-core enrichment writes feature matrices directly without rebuilding enriched AnnData objects for every block;
-- mixed catalog/registered feature metadata is normalized and serialization-preflighted before long-running computation;
-- release validation now includes explicit macOS and Windows smoke checks.
+- variable waveform sample count is no longer part of logical channel identity, so captures of the same physical channel with different lengths stay in one ragged channel;
+- representative variable-length ingestion therefore uses 36 waveform channels rather than 24,291 fragmented identities;
+- raw ragged HDF5 payload compression is configurable with `none`, `lzf` or `gzip`;
+- `none` remains the default after representative benchmarking showed that LZF saved only 0.43% and gzip about 8% while materially increasing write and feature-read time.
 
-On the accepted 180-day / 12-machine H5AD, the representative mixed EDA workload added 118 variables in **43.396 s** with **0.860 GiB** peak RSS. The waveform control improved from **51.358 s** in 0.1.0 to **32.705 s** in 0.2.0.
+On the representative 155,520-observation variable-waveform fixture, the corrected uncompressed H5AD is **13.854 GiB**, versus approximately **98.35 GiB** with the erroneous channel fragmentation. See [Out-of-core workflow](guides/out-of-core.md) and [Configuration](guides/configuration.md).
 
-See [Out-of-core workflow](guides/out-of-core.md) for the measured release-scale results.
+Release 0.2.0 introduced the underlying scalable feature engine: channel-centric planning, vectorized spectral workspaces, fused waveform reductions, matrix-only out-of-core enrichment and serialization preflight. Its accepted mixed EDA workload added 118 variables in **43.396 s** with **0.860 GiB** peak RSS.
 
-## Metric support in 0.2.0
+## Metric support in 0.2.x
 
 Across the supplied metric catalogs, 76 of 104 unique metric names are reproducible from the available persisted signals. Unsupported definitions are rejected explicitly rather than approximated. Phase/cross-phase metrics still require an authoritative complex/phase representation, and two `cross_point_ratio` metrics still require an authoritative definition. See [Metric support](reference/metric-support.md).
 

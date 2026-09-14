@@ -1,6 +1,6 @@
 # Known limitations
 
-These limitations are part of the public 0.2.0 contract so unsupported behavior is not mistaken for a numerical result.
+These limitations are part of the public 0.2.1 contract so unsupported behavior is not mistaken for a numerical result.
 
 ## Phase and cross-phase metrics
 
@@ -32,9 +32,13 @@ Package-generated base datasets are not affected by this restriction.
 
 ## Out-of-core resource use
 
-Large-file ingestion and feature enrichment are bounded-memory and acceptance-tested, but the measured figures are not universal resource guarantees. Raw signal lengths, channel density, feature mix and `block_rows` affect runtime and peak memory.
+Large-file ingestion and feature enrichment are bounded-memory and acceptance-tested, but the measured figures are not universal resource guarantees. Raw signal lengths, channel density, feature mix, HDF5 compression choice and `block_rows` affect runtime, storage and peak memory.
 
-On the accepted 180-day / 12-machine H5AD, release 0.2.0 completed:
+Release 0.2.1 fixes variable waveform channel identity so sample count no longer creates a new logical channel. On the representative 155,520-observation variable-waveform fixture, the corrected uncompressed H5AD uses 36 waveform channels and occupies **13.854 GiB**, instead of approximately **98.35 GiB** with the former 24,291 fragmented identities.
+
+Lossless HDF5 compression is optional rather than automatic. On that fixture, LZF reduced total file size by only 0.43% while increasing write time by 23.6% and RMS enrichment by 25.1%; gzip levels 1 and 4 reduced size by roughly 8% but made writes 3.57–4.03× and RMS enrichment about 4.37× slower. `none` therefore remains the default.
+
+For feature execution, the accepted 180-day / 12-machine benchmark from 0.2.0 completed:
 
 - 36 waveform features in **32.705 s** at **0.310 GiB** peak RSS;
 - 1 spectral feature in **28.261 s** at **0.611 GiB** peak RSS;
@@ -45,11 +49,11 @@ All four workloads passed structural/numerical validation with zero infinite fea
 
 ## Parallel execution
 
-Release 0.2.0 intentionally keeps feature execution serial. A reproducible 1/2/4/8-worker scaling probe found the vectorized serial path fastest on the acceptance runner, so the package does not expose speculative production worker concurrency.
+The 0.2.x line intentionally keeps feature execution serial. A reproducible 1/2/4/8-worker scaling probe found the vectorized serial path fastest on the acceptance runner, so the package does not expose speculative production worker concurrency.
 
 ## Platform coverage
 
-Mandatory pull-request/release CI targets Linux on Python 3.10 and 3.12. Release 0.2.0 additionally passed the opt-in platform-smoke workflow on macOS 14 / Python 3.12 and Windows latest / Python 3.12.
+Mandatory pull-request/release CI targets Linux on Python 3.10 and 3.12. Release 0.2.1 additionally passed the opt-in platform-smoke workflow on macOS 14 / Python 3.12 and Windows latest / Python 3.12.
 
 The platform-smoke workflow is manual by design so hosted-runner quota is not consumed on every development PR.
 
@@ -67,4 +71,4 @@ The BSD-3-Clause package license applies to the software. Repository-authored sy
 
 ## Release immutability
 
-PyPI publication and release tags are effectively immutable release events. Release 0.2.0 therefore went through normal CI, a non-publishing release-candidate gate, macOS/Windows platform smoke, built-wheel validation, PyPI Trusted Publishing, installation of the exact published version back from PyPI, and only then GitHub Release creation.
+PyPI publication and release tags are effectively immutable release events. Release 0.2.1 therefore went through normal CI, a non-publishing release-candidate gate, macOS/Windows platform smoke, built-wheel validation, PyPI Trusted Publishing, installation of the exact published version back from PyPI, and only then GitHub Release creation.
