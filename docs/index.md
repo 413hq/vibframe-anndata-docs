@@ -27,7 +27,7 @@ analysis-ready AnnData / H5AD
 python -m pip install vibframe-anndata
 ```
 
-The current release is **0.2.1** and supports Python 3.10+.
+The current release is **0.2.2** and supports Python 3.10+.
 
 ## Pick the right path
 
@@ -48,11 +48,29 @@ A package-generated dataset can contain:
 - one `obs` row per vibration snapshot;
 - calculated features in `X` / `var`;
 - raw waveform and spectrum payloads in `obsm`;
+- optional snapshot-level evaluation ground truth in `obsm['ground_truth']`;
 - snapshot/channel alignment information;
 - VibFrame metric catalogs and feature descriptors;
 - package configuration and provenance in `uns`.
 
 This makes the H5AD a reusable analysis artifact rather than a one-shot export.
+
+## What changed in 0.2.2
+
+Release 0.2.2 adds an opt-in path for carrying snapshot-level evaluation labels into the
+analysis artifact without turning them into model features:
+
+- partitioned `evaluation/snapshot_truth/**/*.parquet` data can be ingested into
+  `obsm['ground_truth']`;
+- truth rows are aligned to observations by `(source, machine_id, snap_t)` in both in-memory and
+  streamed imports;
+- missing truth has an explicit `error` / `ignore` policy, while duplicate truth keys always fail;
+- source paths, row counts and SHA-256 digests are recorded in package provenance;
+- the truth table stays outside `X` and `obs`, and is preserved through feature editing.
+
+This means evaluation notebooks can read their labels from the H5AD itself instead of reopening
+the original VibFrame. See [Quickstart](getting-started/quickstart.md),
+[Configuration](guides/configuration.md) and [AnnData data model](concepts/data-model.md).
 
 ## What changed in 0.2.1
 
