@@ -1,6 +1,6 @@
 # Known limitations
 
-These limitations are part of the public 0.2.1 contract so unsupported behavior is not mistaken for a numerical result.
+These limitations are part of the public 0.2.2 contract so unsupported behavior is not mistaken for a numerical result.
 
 ## Phase and cross-phase metrics
 
@@ -20,7 +20,10 @@ Those tolerances are repository regression thresholds, not asserted TWave produc
 
 ## VibFrame producer compatibility
 
-The implemented package-side adapter contract is `twave-vibframe-parquet/0.2`. The package interprets `snap_t` as Unix-epoch microseconds, preserves the integer value in `obs['snap_t']`, and derives `obs['timestamp']` in UTC.
+The base raw-signal layout is `twave-vibframe-parquet/0.2`; the default catalog adapter records
+`twave-vibframe-parquet/0.4`, including optional metric-catalog and snapshot-truth discovery. The
+package interprets `snap_t` as Unix-epoch microseconds, preserves the integer value in
+`obs['snap_t']`, and derives `obs['timestamp']` in UTC.
 
 This describes package behavior, not an official producer-version guarantee. Future producer/schema changes that alter field meanings, timestamp units, raw representations or metric semantics may require an explicit adapter/contract revision.
 

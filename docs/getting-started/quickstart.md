@@ -12,7 +12,16 @@ from vibframe_anndata import (
     write_h5ad,
 )
 
-adata = import_raw("dataset.vibframe.zip")
+adata = import_raw(
+    "dataset.vibframe.zip",
+    config={
+        "version": 1,
+        "ground_truth": {"enabled": True, "on_missing": "error"},
+    },
+)
+
+# Evaluation labels travel with the AnnData but remain outside X and obs.
+truth = adata.obsm["ground_truth"]
 
 adata = add_features(
     adata,
@@ -48,6 +57,7 @@ base_path = import_raw_to_h5ad(
     config={
         "version": 1,
         "raw_import": {"on_missing_signal": "nan"},
+        "ground_truth": {"enabled": True, "on_missing": "error"},
         "output": {"dtype": "float32"},
     },
     block_size_mib=8,

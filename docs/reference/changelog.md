@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.2 — 2026-09-15
+
+Patch release 0.2.2 makes snapshot-level evaluation truth a first-class, opt-in part of the AnnData
+artifact.
+
+### Added
+
+- ingestion of partitioned `evaluation/snapshot_truth/**/*.parquet` into the observation-aligned
+  `obsm['ground_truth']` DataFrame for both in-memory and streamed H5AD creation;
+- strict `(source, machine_id, snap_t)` alignment, duplicate detection and configurable missing
+  truth handling;
+- source-file paths, row counts and SHA-256 digests in package provenance;
+- structural and round-trip validation plus preservation across feature editing;
+- public `GroundTruthConfig` with `enabled` and `on_missing` settings.
+
+Ground-truth ingestion is disabled by default. Labels remain outside `X` and `obs`, and
+`trends.parquet` remains excluded from production ingestion.
+
 ## 0.2.1 — 2026-09-14
 
 Patch release 0.2.1 fixes variable-waveform channel fragmentation and adds benchmarked opt-in compression for large ragged raw HDF5 payloads.

@@ -15,6 +15,10 @@ raw_import:
   spectra: true
   on_missing_signal: error   # error | skip_snapshot | nan
 
+ground_truth:
+  enabled: false             # opt in to evaluation/snapshot_truth
+  on_missing: error          # error | ignore
+
 output:
   path: dataset_features.h5ad
   dtype: float64             # float32 | float64
@@ -49,12 +53,35 @@ obs:
 | `version` | Configuration schema version. Current value: `1` |
 | `input` | Optional source path for convenience workflows |
 | `raw_import` | Which raw families to ingest and missing-signal policy |
+| `ground_truth` | Opt-in snapshot evaluation-truth ingestion and missing-data policy |
 | `output` | Optional output path, numerical dtype and raw HDF5 compression policy |
 | `features` | Ordered list of feature requests |
 | `obs` | Requested observation columns |
 | `feature_policy` | Conflict and calculation-error policies |
 
 Unknown keys are rejected.
+
+## Snapshot evaluation ground truth
+
+```yaml
+ground_truth:
+  enabled: true
+  on_missing: error
+```
+
+When enabled, partitioned Parquet files below `evaluation/snapshot_truth/` are aligned to the final
+observation axis by `(source, machine_id, snap_t)` and stored as the DataFrame
+`obsm['ground_truth']`. If `snap_t` is absent, numeric `timestamp` values are interpreted as
+Unix-epoch microseconds.
+
+The default is disabled so labels cannot enter an ordinary ingestion workflow accidentally.
+`on_missing: error` rejects an absent sidecar or an observation with no matching truth row.
+`on_missing: ignore` omits an absent sidecar and permits explicitly missing aligned rows. Duplicate
+truth keys always fail.
+
+Source paths, row counts and SHA-256 digests are recorded under
+`uns['vibframe_anndata']['ground_truth']`. The data is not copied into `X` or `obs`, and
+`trends.parquet` remains excluded.
 
 ## Feature requests
 

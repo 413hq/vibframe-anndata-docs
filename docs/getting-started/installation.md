@@ -41,10 +41,10 @@ print(vfta.import_raw_to_h5ad)
 PY
 ```
 
-For release 0.1.0 the first line should print:
+For release 0.2.2 the first line should print:
 
 ```text
-0.1.0
+0.2.2
 ```
 
 ## Core dependencies
@@ -58,10 +58,10 @@ No compiler or native extension build is required for the package itself.
 For a paper, notebook archive or experiment that must remain reproducible, pin the package version explicitly:
 
 ```bash
-python -m pip install "vibframe-anndata==0.1.0"
+python -m pip install "vibframe-anndata==0.2.2"
 ```
 
-Then use the `0.1.0` documentation version rather than `latest`.
+Then use the `0.2.2` documentation version rather than `latest`.
 
 ## Upgrading
 

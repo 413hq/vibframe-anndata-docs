@@ -9,6 +9,7 @@ The package uses AnnData in its native `n_obs × n_vars` orientation.
 | `var` | One row per materialized feature/metric |
 | `obsm['raw_waveforms']` | Snapshot-aligned ragged waveform payload |
 | `obsm['raw_spectra']` | Snapshot-aligned ragged spectrum payload |
+| `obsm['ground_truth']` | Optional snapshot-aligned evaluation labels as a DataFrame |
 | `uns['vibframe_anndata']` | Provenance, configuration, catalog and raw-channel metadata |
 
 ## Base dataset
@@ -55,6 +56,20 @@ Companion arrays record:
 
 This representation avoids allocating dense NaN-padded sample blocks for missing channels/timestamps.
 
+## Evaluation ground truth in `obsm`
+
+When `ground_truth.enabled` is true, the package reads
+`evaluation/snapshot_truth/**/*.parquet`, aligns its rows to the final observations by
+`(source, machine_id, snap_t)` and stores the result in `obsm['ground_truth']`.
+
+The table index is exactly `obs_names`. Alignment columns are retained for auditing, and the
+source schema is preserved, including JSON physical-state columns. Ground truth is not copied into
+`X` or `obs`, so feature calculations and unsupervised model inputs do not acquire labels
+implicitly.
+
+`trends.parquet`, waveform-selection truth and non-snapshot DiagGT tables are not materialized by
+this mechanism.
+
 ## `X` and `var`
 
 Every calculated feature occupies:
@@ -86,6 +101,7 @@ Package provenance can include:
 - missing/error policy;
 - raw channel/storage metadata;
 - persisted metric catalog;
+- optional ground-truth storage, alignment diagnostics and source-file hashes;
 - generation/modification timestamps.
 
 This information is intended to make derived datasets auditable and reproducible.
