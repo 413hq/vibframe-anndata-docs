@@ -22,6 +22,26 @@ This reference is generated from the exact `vibframe-anndata` package version in
 
 ::: vibframe_anndata.remove_features_from_h5ad
 
+## Ground truth and evaluation
+
+See [Ground truth and evaluation](../guides/ground-truth.md) for storage, alignment and resource semantics.
+
+::: vibframe_anndata.get_snapshot_ground_truth
+
+::: vibframe_anndata.get_waveform_ground_truth
+
+::: vibframe_anndata.list_evaluation_files
+
+::: vibframe_anndata.read_evaluation_file
+
+::: vibframe_anndata.read_evaluation_json
+
+::: vibframe_anndata.read_evaluation_table
+
+::: vibframe_anndata.export_evaluation_files
+
+::: vibframe_anndata.add_ground_truth_to_h5ad
+
 ## Convenience conversion
 
 ::: vibframe_anndata.convert
@@ -39,6 +59,8 @@ This reference is generated from the exact `vibframe-anndata` package version in
 ::: vibframe_anndata.PackageConfig
 
 ::: vibframe_anndata.FeatureRequest
+
+::: vibframe_anndata.GroundTruthConfig
 
 ## Persistence and validation
 

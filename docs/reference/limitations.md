@@ -1,6 +1,6 @@
 # Known limitations
 
-These limitations are part of the public 0.2.2 contract so unsupported behavior is not mistaken for a numerical result.
+These limitations are part of the public 0.3.0 contract so unsupported behavior is not mistaken for a numerical result.
 
 ## Phase and cross-phase metrics
 
@@ -21,11 +21,26 @@ Those tolerances are repository regression thresholds, not asserted TWave produc
 ## VibFrame producer compatibility
 
 The base raw-signal layout is `twave-vibframe-parquet/0.2`; the default catalog adapter records
-`twave-vibframe-parquet/0.4`, including optional metric-catalog and snapshot-truth discovery. The
+`twave-vibframe-parquet/0.5`, including metric catalogs, complete evaluation archives, waveform
+truth and capture-time preservation. The
 package interprets `snap_t` as Unix-epoch microseconds, preserves the integer value in
 `obs['snap_t']`, and derives `obs['timestamp']` in UTC.
 
 This describes package behavior, not an official producer-version guarantee. Future producer/schema changes that alter field meanings, timestamp units, raw representations or metric semantics may require an explicit adapter/contract revision.
+
+## Evaluation preservation is not diagnostic inference
+
+Full scope preserves original annotation files, including unknown formats, within the configured
+encoded-byte budget. Supported construction snapshot/waveform tables have explicit aligned
+views. DiagGT intervals, consolidated diagnoses and findings keep their original semantics; the
+package does not infer a per-snapshot label, assume missing means healthy, or certify physical
+validity. Byte-exact retention is not validation of every future diagnostic schema.
+
+H5AD metadata accessors avoid loading raw signals, but a selected annotation table is decoded in
+memory. The default 512 MiB encoded-sidecar limit is not a total RAM bound. Original archives are
+dataset-wide after slicing; safe export recovers the original campaign files, not rewritten
+subset diagnostics. New imports preserve capture times; retrofitting an older H5AD does not
+recover legacy capture-time matrices. See [Ground truth and evaluation](../guides/ground-truth.md).
 
 ## Variable-axis AnnData structures
 
@@ -52,7 +67,7 @@ All four workloads passed structural/numerical validation with zero infinite fea
 
 ## Parallel execution
 
-The 0.2.x line intentionally keeps feature execution serial. A reproducible 1/2/4/8-worker scaling probe found the vectorized serial path fastest on the acceptance runner, so the package does not expose speculative production worker concurrency.
+Feature execution remains serial in 0.3.0. A reproducible 1/2/4/8-worker scaling probe found the vectorized serial path fastest on the acceptance runner, so the package does not expose speculative production worker concurrency.
 
 ## Platform coverage
 

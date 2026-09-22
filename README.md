@@ -51,6 +51,10 @@ mkdocs serve
 4. moves the `latest` alias to the new version;
 5. publishes the generated site to `gh-pages`.
 
+`docs-version.txt` pins the package version represented by the source guides. Validation installs
+that exact PyPI release. The scheduled publisher refuses to snapshot a different release from
+stale guides, so new versions are published only after their documentation source is updated.
+
 Existing numbered documentation snapshots are preserved unless a maintainer explicitly runs the workflow with `force=true`.
 
 The push trigger means the normal release workflow is now: publish the package, update/merge the public documentation source, and let that `main` update publish the new versioned snapshot automatically. The hourly schedule remains a safety net if no explicit documentation-source update occurs.

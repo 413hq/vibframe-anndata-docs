@@ -28,6 +28,22 @@ print(adata.shape)  # (n_snapshots, 0)
 
 Raw signals are already preserved in `obsm`, while snapshot metadata and provenance are available through `obs` and `uns`.
 
+## Optional evaluation metadata
+
+Use `ground_truth={"enabled": True, "scope": "all"}` inside the import configuration to retain
+complete annotations. `obsm['ground_truth']` exposes declared snapshot labels, and
+`obsm['waveform_ground_truth']` exposes channel-bound waveform records. Original DiagGT files and
+context are retained in `uns['vibframe_evaluation']`. Public accessors accept this AnnData directly:
+
+```python
+from vibframe_anndata import list_evaluation_files
+print(list_evaluation_files(adata))
+```
+
+The archive and aligned labels require metadata memory in addition to the raw signals. Evaluation
+never enters features implicitly; original byte archives are dataset-wide even after observation
+slicing. See [Ground truth and evaluation](ground-truth.md).
+
 ## 2. Add features
 
 ```python

@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.3.0 — 2026-09-22
+
+### Added
+
+- Complete opt-in evaluation preservation: all files below `evaluation/`, `ground-truth/`
+  and `ground_truth/`, root JSON/YAML context and machine JSON documents are retained
+  byte-for-byte in `uns['vibframe_evaluation']`, with source/path identities, sizes and SHA-256.
+  This includes normative DiagGT documents, observations, consolidated observations,
+  findings, manifests, generator configuration, waveform truth and paired-control metadata.
+- Snapshot-aligned waveform annotations in `obsm['waveform_ground_truth']`, with explicit
+  raw-channel bindings, missing/ambiguous diagnostics and strict microsecond timestamp handling.
+- Public resident/H5AD accessors: `list_evaluation_files`, `read_evaluation_file`,
+  `read_evaluation_json`, `read_evaluation_table`, `export_evaluation_files`,
+  `get_snapshot_ground_truth`, `get_waveform_ground_truth`.
+- `add_ground_truth_to_h5ad` enriches existing package H5AD files transactionally, without
+  recalculating features or re-reading source raw sample payloads.
+- Capture-time companion matrices preserve each raw row's `t` separately from `snap_t`;
+  known/fallback flags distinguish an explicit acquisition timestamp from a legacy fallback.
+- Configurable `ground_truth.scope` (`all` or legacy `snapshot`) and an explicit 512 MiB
+  default encoded-sidecar budget; exceeding the budget fails instead of discarding truth.
+
+### Changed
+
+- When ground-truth ingestion is enabled, `all` is now the default scope. The feature remains
+  disabled by default. Select `scope: snapshot` for the previous 0.2.2 footprint and behavior.
+- The catalog adapter contract is `twave-vibframe-parquet/0.5`; original raw compression
+  defaults and numerical feature definitions are unchanged.
+- Same-named input datasets are disambiguated by source-path hashes; repeating one source
+  path is rejected instead of merging observations or annotations accidentally.
+- Out-of-core feature edits preserve embedded sidecar buffers through HDF5 links rather
+  than decoding or rewriting them with each feature block.
+
+### Fixed
+
+- Floating-point timestamp ambiguities, null identities, conflicting `timestamp`/`snap_t`,
+  missing waveform modes and duplicate channel bindings now fail explicitly or retain a
+  documented unresolved status under `on_missing: ignore`.
+- Streamed H5AD validation occurs before destination replacement so failures leave the
+  previous file intact. Export rejects unsafe paths and refuses overwrites.
+
+### Interpretation
+
+Complete preservation is not automatic semantic projection of arbitrary diagnostic intervals.
+Only declared snapshot/waveform identities are aligned; DiagGT records and future schemas
+remain available exactly as authored. See [Ground truth and evaluation](../guides/ground-truth.md).
+
+
 ## 0.2.2 — 2026-09-15
 
 Patch release 0.2.2 makes snapshot-level evaluation truth a first-class, opt-in part of the AnnData
