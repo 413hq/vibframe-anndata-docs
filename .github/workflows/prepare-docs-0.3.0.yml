@@ -44,15 +44,15 @@ jobs:
               assert f'id="vibframe_anndata.{name}"' in api, name
           print('Versioned 0.3.0 guide and all eight API sections verified')
           PY
-      - name: Commit validated guides and remove bootstrap files
+      - name: Commit validated guide content
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs docs-version.txt README.md mkdocs.yml .github/workflows/publish-docs.yml .github/workflows/validate-docs.yml
-          git rm .github/docs-0.3.0.patch.b64 .github/workflows/prepare-docs-0.3.0.yml
+          git add docs docs-version.txt README.md mkdocs.yml
           git commit -m 'docs: document complete ground truth for published vibframe-anndata 0.3.0'
           git push origin HEAD:docs/0.3.0-complete-ground-truth
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: public-docs-0.3.0-preview
           path: site/
