@@ -53,6 +53,7 @@ jobs:
           python - <<'PY'
           import json
           import os
+          import pathlib
           import urllib.request
 
           requested = os.environ.get("INPUT_VERSION") or os.environ.get("DISPATCH_VERSION")
@@ -64,8 +65,13 @@ jobs:
               ) as response:
                   version = json.load(response)["info"]["version"]
 
+          documented = pathlib.Path("docs-version.txt").read_text().strip()
+          ready = version == documented
+          if not ready:
+              print(f"Source guides target {documented}; not publishing {version} from stale guides.")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"version={version}\n")
+              output.write(f"ready={'true' if ready else 'false'}\n")
           print(f"Documentation target: vibframe-anndata=={version}")
           PY
 
@@ -76,6 +82,7 @@ jobs:
         id: publish
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          READY: ${{ steps.version.outputs.ready }}
           FORCE: ${{ github.event.inputs.force || 'false' }}
         run: |
           python - <<'PY'
@@ -95,11 +102,13 @@ jobs:
           except (subprocess.CalledProcessError, json.JSONDecodeError):
               pass
 
-          should_publish = force or not exists
+          should_publish = os.environ.get("READY") == "true" and (force or not exists)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"needed={'true' if should_publish else 'false'}\n")
 
-          if exists and not force:
+          if os.environ.get("READY") != "true":
+              print("No publication: update source guides and docs-version.txt first.")
+          elif exists and not force:
               print(f"Documentation {version} already exists; preserving immutable snapshot.")
           else:
               print(f"Documentation {version} will be published.")
@@ -143,5 +152,5 @@ jobs:
           if [ "$NEEDED" = "true" ]; then
             echo "- Result: published and \`latest\` updated" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- Result: existing immutable snapshot preserved" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Result: existing snapshot preserved or source-version mismatch; no publication" >> "$GITHUB_STEP_SUMMARY"
           fi

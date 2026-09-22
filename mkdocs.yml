@@ -14,6 +14,7 @@ nav:
       - In-memory workflow: guides/in-memory.md
       - Out-of-core workflow: guides/out-of-core.md
       - Configuration: guides/configuration.md
+      - Ground truth and evaluation: guides/ground-truth.md
   - Concepts:
       - Architecture: concepts/architecture.md
       - AnnData data model: concepts/data-model.md

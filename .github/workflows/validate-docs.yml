@@ -7,6 +7,7 @@ on:
       - "docs/**"
       - "mkdocs.yml"
       - "requirements.txt"
+      - "docs-version.txt"
       - ".github/workflows/validate-docs.yml"
       - ".github/workflows/publish-docs.yml"
   pull_request:
@@ -14,6 +15,7 @@ on:
       - "docs/**"
       - "mkdocs.yml"
       - "requirements.txt"
+      - "docs-version.txt"
       - ".github/workflows/**"
 
 permissions:
@@ -40,7 +42,7 @@ jobs:
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip -r requirements.txt
-          python -m pip install vibframe-anndata
+          python -m pip install "vibframe-anndata==$(cat docs-version.txt)"
 
       - name: Build documentation strictly
         run: mkdocs build --strict

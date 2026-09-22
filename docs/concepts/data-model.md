@@ -10,6 +10,8 @@ The package uses AnnData in its native `n_obs × n_vars` orientation.
 | `obsm['raw_waveforms']` | Snapshot-aligned ragged waveform payload |
 | `obsm['raw_spectra']` | Snapshot-aligned ragged spectrum payload |
 | `obsm['ground_truth']` | Optional snapshot-aligned evaluation labels as a DataFrame |
+| `obsm['waveform_ground_truth']` | Snapshot-aligned JSON records with explicit channel bindings |
+| `uns['vibframe_evaluation']` | Byte-exact original annotation files and source/path/hash manifest |
 | `uns['vibframe_anndata']` | Provenance, configuration, catalog and raw-channel metadata |
 
 ## Base dataset
@@ -52,23 +54,40 @@ Companion arrays record:
 - real sample length (`0` means absent);
 - signal position in the ragged snapshot list (`-1` means absent);
 - signal-level speed metadata where available;
-- waveform tacho data where present.
+- waveform tacho data where present;
+- actual capture `t` in integer UTC microseconds (`raw_*_capture_t`) and explicit/fallback flags (`raw_*_capture_t_known`).
 
 This representation avoids allocating dense NaN-padded sample blocks for missing channels/timestamps.
 
-## Evaluation ground truth in `obsm`
+## Evaluation ground truth
 
-When `ground_truth.enabled` is true, the package reads
-`evaluation/snapshot_truth/**/*.parquet`, aligns its rows to the final observations by
-`(source, machine_id, snap_t)` and stores the result in `obsm['ground_truth']`.
+`ground_truth.enabled` is false by default. When enabled, `scope: all` preserves complete
+annotation files and exposes supported aligned views:
 
-The table index is exactly `obs_names`. Alignment columns are retained for auditing, and the
-source schema is preserved, including JSON physical-state columns. Ground truth is not copied into
-`X` or `obs`, so feature calculations and unsupervised model inputs do not acquire labels
-implicitly.
+- `obsm['ground_truth']` aligns construction snapshot tables by `(source, machine_id, snap_t)`.
+- `obsm['waveform_ground_truth']` contains one `records_json` cell per observation. Each record
+  preserves source truth plus its actual waveform-channel binding.
+- `uns['vibframe_evaluation']` preserves original files below `evaluation/`, `ground-truth/`
+  and `ground_truth/`, plus root JSON/YAML and machine JSON context, byte for byte.
 
-`trends.parquet`, waveform-selection truth and non-snapshot DiagGT tables are not materialized by
-this mechanism.
+Both `obsm` views have exactly `obs_names` as their index; neither enters `X` or `obs` implicitly.
+The archive is dataset-wide and remains unchanged after observation slicing. Use
+`read_evaluation_table()` for original Arrow types and `read_evaluation_file()` for exact bytes;
+convenience H5AD projections may stringify nested values.
+
+Snapshot joins use `snap_t`, not raw capture `t`. A stored cropped waveform can start later than
+its snapshot. Waveform joins also use point and supplied mode/definition/config identifiers;
+ambiguous bindings are not guessed. Integer times are microseconds UTC, without unit heuristics.
+The `*_capture_t_known` flag is false when `t` is absent and falls back to `snap_t`, and for absent
+captures. Always consult lengths and flags before interpreting a capture timestamp.
+
+A DiagGT-only source is valid in full scope: its original diagnostics are retained without
+inventing construction labels. Diagnostic intervals/consolidations are not automatically
+projected onto snapshots. `scope: snapshot` keeps the earlier snapshot-only contract.
+Raw `trends.parquet` remains excluded from production feature inputs.
+
+See [Ground truth and evaluation](../guides/ground-truth.md) for API examples, exact coverage rules,
+resource budgets and existing-file migration.
 
 ## `X` and `var`
 

@@ -30,6 +30,27 @@ The writer scans the replayable VibFrame source, allocates the required HDF5/Awk
 
 Starting in 0.2.1, waveform sample count is **not** part of logical channel identity. Repeated captures of the same physical channel therefore remain one ragged channel even when their sample lengths differ; exact per-snapshot lengths remain stored in the ragged companion metadata.
 
+## Complete ground truth at scale
+
+Add this block to the phase-1 configuration to retain evaluation metadata:
+
+```yaml
+ground_truth:
+  enabled: true
+  scope: all
+  on_missing: error
+```
+
+Snapshot and waveform construction labels receive aligned views. Original DiagGT documents,
+annotation tables and scenario metadata are archived byte for byte. Access individual files or
+labels directly from H5AD paths with the public evaluation readers; raw sample arrays are not
+loaded. Feature edits preserve the archive without decoding sidecar buffers per feature block.
+
+The encoded-sidecar budget defaults to 512 MiB. Decoded annotation tables require additional
+memory; this budget does not cap total RAM. Existing files can be enriched with
+`add_ground_truth_to_h5ad()` without recalculating `X` or re-reading source samples. Allow temporary
+disk space for one H5AD copy. See [Ground truth and evaluation](ground-truth.md).
+
 ## Optional raw HDF5 compression
 
 Release 0.2.1 supports lossless compression of the large ragged raw `node2-data` datasets:
@@ -165,4 +186,4 @@ These figures are release evidence, not universal resource guarantees: your raw 
 
 ## Why execution remains serial
 
-A measured 1/2/4/8-worker decision probe found the vectorized single-worker path fastest on the acceptance runner. The 0.2.x line therefore keeps serial execution rather than exposing a worker API that made the measured workload slower.
+A measured 1/2/4/8-worker decision probe found the vectorized single-worker path fastest on the acceptance runner. The package therefore keeps serial execution rather than exposing a worker API that made the measured workload slower.

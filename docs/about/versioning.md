@@ -30,7 +30,11 @@ The public documentation repository uses MkDocs Material and Mike. A documentati
 5. updates the `latest` alias;
 6. pushes the built versioned site to the `gh-pages` branch.
 
-The scheduled synchronization acts as a fallback so a new PyPI release is picked up even if no explicit documentation dispatch is sent.
+The source marker `docs-version.txt` pins the exact package documented by the guides and API.
+The workflow checks this marker against the resolved package version and does not publish a new
+release from stale guides. Update the public source and marker after the package release is ready;
+the main-branch push publishes its versioned snapshot. Scheduled synchronization is a fallback
+only when source and package versions agree.
 
 Existing numbered snapshots are treated as immutable by default. A maintainer can explicitly republish a version with `force=true` when correcting documentation for a just-released package without changing the package artifact itself.
 

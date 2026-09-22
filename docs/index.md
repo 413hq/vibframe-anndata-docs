@@ -27,7 +27,7 @@ analysis-ready AnnData / H5AD
 python -m pip install vibframe-anndata
 ```
 
-The current release is **0.2.2** and supports Python 3.10+.
+The current release is **0.3.0** and supports Python 3.10+.
 
 ## Pick the right path
 
@@ -48,29 +48,42 @@ A package-generated dataset can contain:
 - one `obs` row per vibration snapshot;
 - calculated features in `X` / `var`;
 - raw waveform and spectrum payloads in `obsm`;
-- optional snapshot-level evaluation ground truth in `obsm['ground_truth']`;
+- optional snapshot labels in `obsm['ground_truth']` and per-waveform annotations in `obsm['waveform_ground_truth']`;
+- a byte-exact evaluation archive in `uns['vibframe_evaluation']`, including DiagGT, manifests and scenario context;
 - snapshot/channel alignment information;
 - VibFrame metric catalogs and feature descriptors;
 - package configuration and provenance in `uns`.
 
 This makes the H5AD a reusable analysis artifact rather than a one-shot export.
 
-## What changed in 0.2.2
+## Complete evaluation data
 
-Release 0.2.2 adds an opt-in path for carrying snapshot-level evaluation labels into the
-analysis artifact without turning them into model features:
+With `ground_truth.enabled: true`, release 0.3.0 preserves all regular files under
+`evaluation/`, `ground-truth/` and `ground_truth/`, plus root JSON/YAML and machine JSON context.
+Snapshot and waveform construction labels have explicit source/machine/time/channel alignment;
+DiagGT originals retain their own schema and meaning. No diagnostic interval is silently converted
+into a snapshot target.
 
-- partitioned `evaluation/snapshot_truth/**/*.parquet` data can be ingested into
-  `obsm['ground_truth']`;
-- truth rows are aligned to observations by `(source, machine_id, snap_t)` in both in-memory and
-  streamed imports;
-- missing truth has an explicit `error` / `ignore` policy, while duplicate truth keys always fail;
-- source paths, row counts and SHA-256 digests are recorded in package provenance;
-- the truth table stays outside `X` and `obs`, and is preserved through feature editing.
+```python
+from vibframe_anndata import import_raw_to_h5ad, list_evaluation_files
 
-This means evaluation notebooks can read their labels from the H5AD itself instead of reopening
-the original VibFrame. See [Quickstart](getting-started/quickstart.md),
-[Configuration](guides/configuration.md) and [AnnData data model](concepts/data-model.md).
+path = import_raw_to_h5ad(
+    "dataset.vibframe.zip", "dataset_raw.h5ad",
+    config={
+        "version": 1,
+        "ground_truth": {"enabled": True, "scope": "all"},
+        "output": {"dtype": "float32"},
+    },
+    block_size_mib=8,
+)
+print(list_evaluation_files(path))
+```
+
+Metadata accessors can read labels and individual original tables directly from an H5AD without
+loading its waveforms. `add_ground_truth_to_h5ad()` can enrich existing 0.2.x files without
+recalculating features. Evaluation remains opt-in and outside `X`/`obs`; `scope: snapshot`
+preserves the former snapshot-only behavior. See [Ground truth and evaluation](guides/ground-truth.md)
+for complete examples, missing-data rules, resource limits and migration.
 
 ## What changed in 0.2.1
 
@@ -85,7 +98,7 @@ On the representative 155,520-observation variable-waveform fixture, the correct
 
 Release 0.2.0 introduced the underlying scalable feature engine: channel-centric planning, vectorized spectral workspaces, fused waveform reductions, matrix-only out-of-core enrichment and serialization preflight. Its accepted mixed EDA workload added 118 variables in **43.396 s** with **0.860 GiB** peak RSS.
 
-## Metric support in 0.2.x
+## Metric support
 
 Across the supplied metric catalogs, 76 of 104 unique metric names are reproducible from the available persisted signals. Unsupported definitions are rejected explicitly rather than approximated. Phase/cross-phase metrics still require an authoritative complex/phase representation, and two `cross_point_ratio` metrics still require an authoritative definition. See [Metric support](reference/metric-support.md).
 

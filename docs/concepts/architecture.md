@@ -30,8 +30,9 @@ The adapter is the only layer that understands the physical VibFrame representat
 
 A replayable adapter allows the scalable writer to make one pass for exact shape/count discovery and a later pass for numerical writes without retaining the complete raw payload in memory.
 
-The base raw-signal layout is `twave-vibframe-parquet/0.2`. The default catalog adapter in 0.2.2
-records `twave-vibframe-parquet/0.4`, adding optional metric-catalog and snapshot-truth discovery.
+The base raw-signal layout is `twave-vibframe-parquet/0.2`. The default catalog adapter in 0.3.0
+records `twave-vibframe-parquet/0.5`, adding metric catalogs, complete evaluation preservation,
+waveform truth and separate capture timestamps.
 These identifiers describe implemented package behavior; they are not asserted to be official
 producer/TWave schema versions.
 

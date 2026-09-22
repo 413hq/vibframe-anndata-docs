@@ -16,8 +16,10 @@ raw_import:
   on_missing_signal: error   # error | skip_snapshot | nan
 
 ground_truth:
-  enabled: false             # opt in to evaluation/snapshot_truth
+  enabled: false             # opt in to evaluation metadata
+  scope: all                 # all | snapshot (legacy footprint)
   on_missing: error          # error | ignore
+  max_sidecar_mib: 512       # positive integer; original encoded sidecar bytes
 
 output:
   path: dataset_features.h5ad
@@ -43,6 +45,8 @@ obs:
   include:
     - snapshot_id
     - timestamp
+    - snap_t
+    - source
     - machine
 ```
 
@@ -53,7 +57,7 @@ obs:
 | `version` | Configuration schema version. Current value: `1` |
 | `input` | Optional source path for convenience workflows |
 | `raw_import` | Which raw families to ingest and missing-signal policy |
-| `ground_truth` | Opt-in snapshot evaluation-truth ingestion and missing-data policy |
+| `ground_truth` | Opt-in complete evaluation preservation, scope, coverage policy and encoded-sidecar budget |
 | `output` | Optional output path, numerical dtype and raw HDF5 compression policy |
 | `features` | Ordered list of feature requests |
 | `obs` | Requested observation columns |
@@ -61,27 +65,39 @@ obs:
 
 Unknown keys are rejected.
 
-## Snapshot evaluation ground truth
+## Ground truth and evaluation metadata
 
 ```yaml
 ground_truth:
   enabled: true
+  scope: all
   on_missing: error
+  max_sidecar_mib: 512
 ```
 
-When enabled, partitioned Parquet files below `evaluation/snapshot_truth/` are aligned to the final
-observation axis by `(source, machine_id, snap_t)` and stored as the DataFrame
-`obsm['ground_truth']`. If `snap_t` is absent, numeric `timestamp` values are interpreted as
-Unix-epoch microseconds.
+`enabled` defaults to false. When true, `scope` defaults to `all`: retain all regular files under
+`evaluation/`, `ground-truth/`, `ground_truth/`, root JSON/YAML and machine JSON context. Explicit
+construction snapshot and waveform tables also receive source/machine/time/channel-aligned views
+in `obsm`. Original files, including DiagGT and unknown future sidecars, live in
+`uns['vibframe_evaluation']` with source/path/size/SHA-256 provenance.
 
-The default is disabled so labels cannot enter an ordinary ingestion workflow accidentally.
-`on_missing: error` rejects an absent sidecar or an observation with no matching truth row.
-`on_missing: ignore` omits an absent sidecar and permits explicitly missing aligned rows. Duplicate
-truth keys always fail.
+`scope: snapshot` opts into the previous 0.2.2 behavior and footprint. It does not create a complete
+archive or waveform projection. Neither scope adds labels to `X` or `obs`.
 
-Source paths, row counts and SHA-256 digests are recorded under
-`uns['vibframe_anndata']['ground_truth']`. The data is not copied into `X` or `obs`, and
-`trends.parquet` remains excluded.
+`on_missing: error` rejects absent requested evaluation data and missing/ambiguous declared
+construction labels. Full scope does not require a construction table from a source that only
+provides DiagGT. Mixed sources may provide different truth families. `ignore` permits explicitly
+missing/unresolved values, never guessed labels. Duplicate truth keys and duplicate bindings fail.
+Spectra-only imports may retain waveform annotations as unbound.
+
+`max_sidecar_mib` is a positive integer limit on the sum of original encoded sidecar bytes in full
+scope. The default is 512 MiB; exceeding it raises an error rather than dropping annotations.
+It is not a process-RAM limit: decoded tables, JSON and aligned projections consume additional
+memory. Read large annotation tables individually with the metadata accessors.
+
+Integer `timestamp`/`snap_t` values must be exact UTC microseconds. Retain `source`, `machine`
+and `snap_t` in `obs` when an H5AD may later be enriched using `add_ground_truth_to_h5ad()`.
+See [Ground truth and evaluation](ground-truth.md) for examples and complete alignment rules.
 
 ## Feature requests
 

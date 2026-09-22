@@ -16,12 +16,12 @@ adata = import_raw(
     "dataset.vibframe.zip",
     config={
         "version": 1,
-        "ground_truth": {"enabled": True, "on_missing": "error"},
+        "ground_truth": {"enabled": True, "scope": "all", "on_missing": "error"},
     },
 )
 
 # Evaluation labels travel with the AnnData but remain outside X and obs.
-truth = adata.obsm["ground_truth"]
+truth = adata.obsm.get("ground_truth")  # absent for a DiagGT-only source
 
 adata = add_features(
     adata,
@@ -36,7 +36,7 @@ adata = add_features(
 
 print(adata.shape)
 print(adata.obs.head())
-print(adata.var[["name", "source"]])
+print(adata.var[["feature_name", "signal_source", "unit"]])
 
 adata = remove_features(adata, ["kurtosis"])
 write_h5ad(adata, "dataset_features.h5ad")
@@ -57,7 +57,7 @@ base_path = import_raw_to_h5ad(
     config={
         "version": 1,
         "raw_import": {"on_missing_signal": "nan"},
-        "ground_truth": {"enabled": True, "on_missing": "error"},
+        "ground_truth": {"enabled": True, "scope": "all", "on_missing": "error"},
         "output": {"dtype": "float32"},
     },
     block_size_mib=8,
@@ -81,6 +81,29 @@ print(feature_path)
 ```
 
 The output file is written transactionally: the requested destination is promoted only after all blocks succeed.
+
+## Read evaluation metadata or upgrade an existing H5AD
+
+```python
+from vibframe_anndata import (
+    list_evaluation_files, get_snapshot_ground_truth, add_ground_truth_to_h5ad,
+)
+
+print(list_evaluation_files("dataset_features.h5ad"))
+# When construction snapshot labels exist:
+labels = get_snapshot_ground_truth("dataset_features.h5ad")
+
+# Existing 0.2.x H5AD: preserve features/raw arrays and add complete source annotations.
+add_ground_truth_to_h5ad(
+    "older_features.h5ad", "dataset.vibframe.zip",
+    output="complete_features.h5ad",
+)
+```
+
+Evaluation import is opt-in; omit or disable `ground_truth` for an unlabelled source.
+The retrofit reads annotations/source metadata and makes a transactional disk copy, not a second
+raw-signal ingestion. Keep `source`, `machine` and `snap_t` in `obs`. See
+[Ground truth and evaluation](../guides/ground-truth.md) for waveform labels and original DiagGT tables.
 
 ## Recalculate a feature
 
