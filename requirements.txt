@@ -1,4 +1,6 @@
 mkdocs>=1.6,<2
 mkdocs-material>=9.6,<10
 mkdocstrings[python]>=0.27,<1
+# PyMdown 12.2 changed Highlight's constructor; mkdocstrings 0.x needs the older API.
+pymdown-extensions<12.2
 mike>=2.1,<3
