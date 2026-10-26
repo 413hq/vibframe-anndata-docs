@@ -37,20 +37,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements.txt
-
       - name: Resolve package version
         id: version
         env:
           INPUT_VERSION: ${{ github.event.inputs.version || '' }}
           DISPATCH_VERSION: ${{ github.event.client_payload.version || '' }}
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           import json
           import os
           import pathlib
@@ -85,7 +78,7 @@ jobs:
           READY: ${{ steps.version.outputs.ready }}
           FORCE: ${{ github.event.inputs.force || 'false' }}
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           import json
           import os
           import subprocess
@@ -113,6 +106,16 @@ jobs:
           else:
               print(f"Documentation {version} will be published.")
           PY
+
+      # Preflight checks above use only the runner's Python 3 standard library.
+      # Only register pip caching when dependencies will actually be installed.
+      - name: Set up Python
+        if: steps.publish.outputs.needed == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install documentation toolchain
         if: steps.publish.outputs.needed == 'true'
