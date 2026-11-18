@@ -14,6 +14,7 @@ raw_import:
   waveforms: true
   spectra: true
   on_missing_signal: error   # error | skip_snapshot | nan
+  allow_historical: false    # allow archived 0.2/0.3 after their transition dates
 
 ground_truth:
   enabled: false             # opt in to evaluation metadata
@@ -38,7 +39,7 @@ features:
       point_id: P1
     options: {}
 
-  - name: disp_overall_rms
+  - name: disp_overall
     source: spectrum
 
 obs:
@@ -64,6 +65,22 @@ obs:
 | `feature_policy` | Conflict and calculation-error policies |
 
 Unknown keys are rejected.
+
+## VibFrame input and operating context
+
+The adapter reads the file-format version from `dataset.json`. It supports the
+VibFrame 0.4 series through 0.4.3 and accepts 0.3 under the transition policy
+through December 31, 2026. Set `raw_import.allow_historical: true` to read
+archived 0.2 or to read 0.3 from January 1, 2027 onward.
+
+Both directories and ZIP archives support `machine=<id>` and
+`source=<id>/machine=<id>` partitions. Select `on_missing_signal: nan` to
+retain snapshots with intermittent raw signals.
+
+The adapter projects only the reserved `speed`, `load` and `state` rows
+from `trends.parquet` into `obs`. The join uses the source, machine, declared
+snapshot and configuration. Captures without a declared snapshot and
+ambiguous context values leave those fields missing.
 
 ## Ground truth and evaluation metadata
 
@@ -112,6 +129,10 @@ Each feature request supports:
 | `options` | Algorithm-specific options for registered metrics |
 
 Catalog-backed metrics take their effective calculation parameters from the persisted metric catalog. Ad-hoc `options` are rejected for those metrics rather than silently overriding the reference descriptor.
+
+A catalog request can use the producer's name or a normalized canonical name.
+Use `select.canonical_metric` for an explicit canonical match and
+`select.config_id` to select a configuration generation.
 
 ## Conflict policies
 

@@ -10,6 +10,7 @@ Each published package release gets a documentation snapshot with the same seman
 0.1.0
 0.2.0
 0.3.0
+0.4.0
 ...
 ```
 
