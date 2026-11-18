@@ -4,8 +4,8 @@ The package uses AnnData in its native `n_obs × n_vars` orientation.
 
 | AnnData slot | Meaning in `vibframe-anndata` |
 |---|---|
-| `obs` | One row per snapshot |
-| `X` | Numerical matrix: snapshots × materialized features |
+| `obs` | Snapshot and capture observations |
+| `X` | Numerical matrix of observations × materialized features |
 | `var` | One row per materialized feature/metric |
 | `obsm['raw_waveforms']` | Snapshot-aligned ragged waveform payload |
 | `obsm['raw_spectra']` | Snapshot-aligned ragged spectrum payload |
@@ -19,14 +19,14 @@ The package uses AnnData in its native `n_obs × n_vars` orientation.
 Immediately after raw import, the dataset may intentionally contain no calculated feature:
 
 ```text
-shape == (n_snapshots, 0)
-len(obs) == n_snapshots
+shape == (n_obs, 0)
+len(obs) == n_obs
 len(var) == 0
 ```
 
 That zero-feature object/file is the reusable phase-1 state.
 
-## `obs`: snapshot axis
+## Observations in `obs`
 
 `snapshot_id` is mandatory and aligned with the observation index. Depending on available source metadata, additional columns can include:
 
@@ -37,6 +37,16 @@ That zero-feature object/file is the reusable phase-1 state.
 - `has_spectrum`.
 
 `has_waveform` and `has_spectrum` are useful when acquisition schedules differ. A spectrum-only timestamp remains a valid observation even if no waveform exists for that row.
+
+An ungrouped capture uses its capture time as `timestamp` and keeps a null
+`snap_t`. If a channel has several captures in a snapshot, the earliest stays
+in the snapshot observation. Each later capture retains the same `snap_t` and
+has its own ID, capture-time `timestamp` and `is_repeated_capture` flag.
+
+The reserved operating context appears as `speed` (Hz), `load`, `load_unit`,
+`state` and `state_label`. The existing `speed_hz` summarizes raw capture
+speed. A state without a matching configuration legend keeps its numeric ID
+with an empty label.
 
 ## Raw signals in `obsm`
 
@@ -53,7 +63,7 @@ Companion arrays record:
 
 - real sample length (`0` means absent);
 - signal position in the ragged snapshot list (`-1` means absent);
-- signal-level speed metadata where available;
+- signal-level speed and its declared provenance where available;
 - waveform tacho data where present;
 - actual capture `t` in integer UTC microseconds (`raw_*_capture_t`) and explicit/fallback flags (`raw_*_capture_t_known`).
 
@@ -96,7 +106,11 @@ Every calculated feature occupies:
 - one column in `X`;
 - one row in `var`.
 
-Catalog-backed features retain their catalog identity and descriptor metadata for traceability. Registered features derive deterministic logical identifiers from their request and selected raw channel.
+Catalog-backed features retain the original `metric_id` and descriptor. IDs
+reused across partitions or generations are qualified with source, machine
+and configuration as needed. Features expose a normalized `canonical_metric`,
+`detector`, `proxy_quality` and nullable `rank`. Registered features derive
+deterministic logical identifiers from their request and selected raw channel.
 
 Typical `var` metadata can include:
 

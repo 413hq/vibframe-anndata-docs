@@ -27,7 +27,15 @@ analysis-ready AnnData / H5AD
 python -m pip install vibframe-anndata
 ```
 
-The current release is **0.3.0** and supports Python 3.10+.
+The current package release is **0.4.0** and supports Python 3.10+.
+
+## VibFrame 0.3 and 0.4
+
+Version 0.4.0 reads directories and ZIP archives with single-source or
+multi-source partitions and chunked Parquet tables. It supports VibFrame 0.3
+and 0.4 through 0.4.3. Feature calculations use the stored spectral cutoff and
+axis and distinguish envelope from PeakVue. See [Configuration](guides/configuration.md)
+for historical reads and [Metrics and provenance](concepts/metrics.md) for calculation rules.
 
 ## Pick the right path
 
@@ -45,7 +53,8 @@ Both paths implement the same logical AnnData contract and the same numerical fe
 
 A package-generated dataset can contain:
 
-- one `obs` row per vibration snapshot;
+- snapshot observations and separate observations for ungrouped or repeated captures;
+- reserved operating context (`speed`, `load`, and `state`) in `obs` when an exact snapshot match exists;
 - calculated features in `X` / `var`;
 - raw waveform and spectrum payloads in `obsm`;
 - optional snapshot labels in `obsm['ground_truth']` and per-waveform annotations in `obsm['waveform_ground_truth']`;

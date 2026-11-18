@@ -1,6 +1,6 @@
 # Known limitations
 
-These limitations are part of the public 0.3.0 contract so unsupported behavior is not mistaken for a numerical result.
+These limitations describe calculation and input coverage in version 0.4.0.
 
 ## Phase and cross-phase metrics
 
@@ -20,13 +20,14 @@ Those tolerances are repository regression thresholds, not asserted TWave produc
 
 ## VibFrame producer compatibility
 
-The base raw-signal layout is `twave-vibframe-parquet/0.2`; the default catalog adapter records
-`twave-vibframe-parquet/0.5`, including metric catalogs, complete evaluation archives, waveform
-truth and capture-time preservation. The
-package interprets `snap_t` as Unix-epoch microseconds, preserves the integer value in
-`obs['snap_t']`, and derives `obs['timestamp']` in UTC.
+The adapter reads VibFrame 0.3 and 0.4 under the version policy in
+[Configuration](../guides/configuration.md). Base import requires at least one
+selected waveform or spectrum. Operating context is available when an exact
+snapshot and configuration match exists.
 
-This describes package behavior, not an official producer-version guarantee. Future producer/schema changes that alter field meanings, timestamp units, raw representations or metric semantics may require an explicit adapter/contract revision.
+Order-tracked feature calculations require a captured order-tracked spectrum.
+Reconstructed PeakVue requires an identifiable acceleration capture, a valid
+sample rate and enough mode information to realize the waveform or FFT.
 
 ## Evaluation preservation is not diagnostic inference
 
@@ -67,7 +68,7 @@ All four workloads passed structural/numerical validation with zero infinite fea
 
 ## Parallel execution
 
-Feature execution remains serial in 0.3.0. A reproducible 1/2/4/8-worker scaling probe found the vectorized serial path fastest on the acceptance runner, so the package does not expose speculative production worker concurrency.
+Feature execution remains serial in 0.4.0. A reproducible 1/2/4/8-worker scaling probe found the vectorized serial path fastest on the acceptance runner, so the package does not expose speculative production worker concurrency.
 
 ## Platform coverage
 

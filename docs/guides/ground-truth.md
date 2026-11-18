@@ -37,9 +37,9 @@ nested/object columns for H5AD compatibility. Use `read_evaluation_table` for th
 schema or `read_evaluation_file` for exact bytes. Files are never executed. Symlinks, unsafe paths
 and unfinished `.inprogress`, `.partial`, `.tmp` files are rejected or excluded as documented.
 
-This is not a second raw-signal archive. Raw `waves.parquet`, `spectra.parquet` and
-`trends.parquet` outside these annotation roots are not copied into it. Trend values remain a
-numerical-regression oracle, never a source of calculated features.
+The archive stores evaluation and provenance files. The base importer
+projects the three reserved operating scalars into `obs` separately. Other
+trend values serve as references for numerical regression.
 
 ## Import a complete dataset
 

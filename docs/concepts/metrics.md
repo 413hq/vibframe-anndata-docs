@@ -45,11 +45,29 @@ The current implementation includes:
 - envelope/demodulation processing;
 - bearing-frequency families where the source descriptor provides the required definition.
 
+## VibFrame spectral axes and demodulation
+
+Spectral calculations exclude bins below `low_cutoff_hz` and use the original
+bin spacing for peak searches. Order-tracked spectra evaluate order bands and
+references on the stored order axis. Conversion between Hz and shaft orders
+requires the capture's positive speed. With `feature_policy.on_error: nan`,
+unavailable results are represented as NaN.
+
+Demodulation metrics use the processed spectrum or waveform from the matching
+mode when available. Reconstruction from a carrier uses the Hilbert envelope
+or absolute peak hold according to `processing.demodulation`. The envelope
+levels `gE`, `env_overall_rms` and `env_p2p` require envelope demodulation.
+The effective method and spectral axis unit appear in `var`.
+
+Historical VibFrame 0.2 catalogs use a versioned 66-name crosswalk to the 0.3
+canonical names. The original descriptor keeps the source spelling, detector
+and rank or weight.
+
 ## Unsupported definitions are explicit
 
 Some catalog definitions cannot be reconstructed from the persisted source signals.
 
-For 0.1.0:
+The current limitations include:
 
 - phase and cross-phase metrics need complex spectral information, while the available spectra persist magnitude only;
 - two cross-point ratio metrics lack an authoritative supplied reference calculation.

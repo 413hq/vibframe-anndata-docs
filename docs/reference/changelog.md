@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.4.0 — 2026-11-18
+
+### Added
+
+- Read VibFrame 0.3 and 0.4 through 0.4.3 from directories and ZIP archives,
+  including multi-source partitions and chunked signal tables. The input
+  version policy exposes an explicit historical mode.
+- Resolve acquisition modes and spectrum detectors by configuration generation.
+  Preserve capture times, optional snapshot grouping and declared speed provenance.
+- Apply the spectral cutoff and order axis to feature calculations. Calculate
+  envelope and PeakVue metrics from their matching captures and reconstruct
+  demodulation when the waveform and mode contain the required information.
+- Normalize the 66 historical canonical metric aliases while preserving the
+  original descriptors, detector, mapping quality and rank.
+- Project reserved operating context into `obs` using the source, machine,
+  snapshot and configuration. This includes speed, load and state.
+
+### Fixed
+
+- Metric IDs shared across configuration generations produce separate feature
+  columns. Recalculation recognizes historical feature IDs through their
+  stored descriptors.
+- Repeated captures of one channel retain distinct capture times and
+  observations while preserving their source-declared snapshot.
+
 ## 0.3.0 — 2026-09-22
 
 ### Added
